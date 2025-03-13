@@ -1,10 +1,11 @@
-package com.asd.service;
+package com.osj.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 @Service
 public class GoogleDirectionsService {
@@ -36,14 +37,24 @@ public class GoogleDirectionsService {
         RestTemplate restTemplate = new RestTemplate();
         try {
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            System.out.println("API Response: " + response.getBody());
+            
             JSONObject jsonResponse = new JSONObject(response.getBody());
 
-            // 🚀 API 응답이 실패하거나 경로가 없을 경우 처리
+            // API 응답이 실패하거나 경로가 없을 경우 처리
             if (!jsonResponse.getString("status").equals("OK")) {
                 return "Error: " + jsonResponse.getString("status");
             }
-
-            return jsonResponse.toString(4);  // JSON Pretty Print
+            
+            // 여러 요소를 저장하기 위해 array 형태로 저장
+            JSONArray routes = jsonResponse.getJSONArray("routes");
+            if (routes.length() > 0) {
+            	JSONArray legs = routes.getJSONObject(0).getJSONArray("legs");
+            	return legs.toString(4);
+            } else {
+            	return "Error : 경로 정보가 없습니다.";
+            }
+            
         } catch (Exception e) {
             return "Error: API 요청 실패 - " + e.getMessage();
         }
