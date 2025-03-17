@@ -1,14 +1,14 @@
-package com.asd.service;
+package com.osj.service;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.json.JSONObject;
+import org.json.JSONArray;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.configurationprocessor.json.JSONArray;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 public class GooglePlacesService {
@@ -37,7 +37,7 @@ public class GooglePlacesService {
 
             JSONObject place = results.getJSONObject(0); // 첫 번째 검색 결과 가져오기
 
-            // 필요한 정보 추출
+            // 필요한 정보 추출(json에서 특정 필드만 추출하여 관리에 용이함)
             Map<String, String> placeData = new HashMap<>();
             placeData.put("name", place.optString("name", "N/A"));
             placeData.put("address", place.optString("formatted_address", "N/A"));
