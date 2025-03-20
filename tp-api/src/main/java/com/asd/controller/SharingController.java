@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,8 +26,8 @@ public class SharingController {
 	
 	// 자신의 여행을 남에게 공유하기
 	@PostMapping("/grant")
-	public Map<String, String> sharingMyTrip(@RequestBody SharingDto requestDto) {
-		sharingService.sharingMyTrip(requestDto.getSender(), requestDto.getReceiver(), requestDto.getTrip(), requestDto.getAuth());
+	public Map<String, String> sharingMyTrip(@RequestHeader(value = "X_USER_PAYLOAD", required = false) String userId, @RequestBody SharingDto requestDto) {
+		sharingService.sharingMyTrip(userId, requestDto.getReceiver(), requestDto.getTrip(), requestDto.getAuth());
 		Map<String, String> response = new HashMap<>();
 		response.put("check", "true");
     	return response;
@@ -43,13 +44,13 @@ public class SharingController {
 	
 	// 해당 여행의 권한 목록
 	@GetMapping("/getAuth")
-	public List<SharingDto> getAuth(@RequestParam String nickname, @RequestParam String trip) {
-		return sharingService.getAuth(nickname, trip);
+	public List<SharingDto> getAuth(@RequestHeader(value = "X_USER_PAYLOAD", required = false) String userId, @RequestParam String tripCount) {
+		return sharingService.getAuth(userId, tripCount);
 	}
 	
 	// 자신이 공유 받은 여행 목록
 	@GetMapping("/getSharedTrip")
-	public List<SharingDto> getSharedTrip(@RequestParam String nickname) {
-		return sharingService.getSharedTrip(nickname);
+	public List<SharingDto> getSharedTrip(@RequestHeader(value = "X_USER_PAYLOAD", required = false) String userId) {
+		return sharingService.getSharedTrip(userId);
 	}
 }

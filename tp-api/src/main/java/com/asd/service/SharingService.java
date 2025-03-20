@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.asd.DTO.SharingDto;
 import com.asd.exception.ResourceNotFoundException;
+import com.asd.model.User;
 import com.asd.repository.SharingRepository;
 import com.asd.repository.UserRepository;
 
@@ -20,39 +21,37 @@ public class SharingService {
 	private final UserRepository userRepository;
 	
 	// 자신의 일정 공유
-	public void sharingMyTrip(String sender, String receiver, String trip, String auth) {
-		// nickname -> id 변환
-		String senderId = userRepository.getIdByNickname(sender);
+	public void sharingMyTrip(String userId, String receiver, String trip, String auth) {
         String receiverId = userRepository.getIdByNickname(receiver);
+
+		User user = userRepository.getUser(userId);
         
-        sharingRepository.addSendTrip(senderId, receiver, trip, auth);
-        sharingRepository.addReceiveTrip(receiverId, sender, trip, auth);
+        sharingRepository.addSendTrip(userId, receiver, trip, auth);
+        sharingRepository.addReceiveTrip(receiverId, user.getNickname(), trip, auth);
 	}
 	
 	// 공유된 여행 권한 삭제
-	public void deleteAuth(String sender, String receiver, String trip, String auth) {
-		// nickname -> id 변환
-		String senderId = userRepository.getIdByNickname(sender);
+	public void deleteAuth(String userId, String receiver, String trip, String auth) {
         String receiverId = userRepository.getIdByNickname(receiver);
+
+		User user = userRepository.getUser(userId);
         
-        Long removedSend = sharingRepository.removeSendTrip(senderId, receiver, trip, auth);
+        Long removedSend = sharingRepository.removeSendTrip(userId, receiver, trip, auth);
         if (removedSend == 0) {
             throw new IllegalArgumentException("삭제 실패 (보낸 목록)");
         }
 
-        Long removedReceive = sharingRepository.removeReceiveTrip(receiverId, sender, trip, auth);
+        Long removedReceive = sharingRepository.removeReceiveTrip(receiverId, user.getNickname(), trip, auth);
         if (removedReceive == 0) {
             throw new IllegalArgumentException("삭제 실패 (받은 목록)");
         }
 	}
 	
 	// 해당 여행의 권한 목록
-	public List<SharingDto> getAuth(String nickname, String trip) {
-		// nickname -> id 변환
-		String id = userRepository.getIdByNickname(nickname);
-		
+	public List<SharingDto> getAuth(String userId, String trip) {
 		// 권한 목록 추출
-		Set<String> authSet = sharingRepository.getSendTrips(id, trip);
+		Set<String> authSet = sharingRepository.getSendTrips(userId, trip);
+		User user = userRepository.getUser(userId);
 		
 		if (authSet == null || authSet.isEmpty()) {
             throw new ResourceNotFoundException("여행 일정을 공유한 사람이 없습니다.");
@@ -61,19 +60,17 @@ public class SharingService {
 		List<SharingDto> sharingDtos = new ArrayList<>(authSet.size());
 		for(String auth : authSet) {
 			String[] str = auth.split(":");
-			sharingDtos.add(new SharingDto(nickname, str[0], str[1], str[2]));
+			sharingDtos.add(new SharingDto(user.getNickname(), str[0], str[1], str[2]));
         }
 		
 		return sharingDtos;
 	}
 	
 	// 공유 받은 여행 목록
-	public List<SharingDto> getSharedTrip(String nickname) {
-		// nickname -> id 변환
-		String id = userRepository.getIdByNickname(nickname);
-		
+	public List<SharingDto> getSharedTrip(String userId) {
 		// 여행 목록 추출
-		Set<String> tripSet = sharingRepository.getReceivedTrips(id);
+		Set<String> tripSet = sharingRepository.getReceivedTrips(userId);
+		User user = userRepository.getUser(userId);
 		
 		if (tripSet == null || tripSet.isEmpty()) {
             throw new ResourceNotFoundException("공유된 여행이 없습니다.");
@@ -82,7 +79,7 @@ public class SharingService {
 		List<SharingDto> sharingDtos = new ArrayList<>(tripSet.size());
 		for(String trip : tripSet) {
 			String[] str = trip.split(":");
-			sharingDtos.add(new SharingDto(str[0], nickname, str[1], str[2]));
+			sharingDtos.add(new SharingDto(str[0], user.getNickname(), str[1], str[2]));
         }
 		
 		return sharingDtos;

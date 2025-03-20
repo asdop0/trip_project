@@ -18,42 +18,30 @@ public class TripService {
 	private final UserRepository userRepository;
 	
 	// 여행 목록 조회
-	public List<TripDto> getTripList(String nickname) {
-		// nickname -> id 변환
-		String id = userRepository.getIdByNickname(nickname);
-		
-		List<TripDto> tripList = tripRepository.getTripList(id);
+	public List<TripDto> getTripList(String userId) {
+		List<TripDto> tripList = tripRepository.getTripList(userId);
 		
 		return tripList;
 	}
 	
 	// 여행 추가
-	public void addTrip(String nickname, String tripName) {
-		// nickname -> id 변환
-		String id = userRepository.getIdByNickname(nickname);
-		
-		User user = userRepository.getUser(id);
-		tripRepository.addTrip(id, user.getTripCount(), tripName);
+	public void addTrip(String userId, String tripName) {
+		User user = userRepository.getUser(userId);
+		tripRepository.addTrip(userId, user.getTripCount(), tripName);
 		
 		int num = Integer.parseInt(user.getTripCount()) + 1;
-		userRepository.upTripCount(id, String.valueOf(num));
+		userRepository.upTripCount(userId, String.valueOf(num));
 	}
 	
 	// 여행 삭제 
-	public void deleteTrip(String nickname, String tripCount) {
-		// nickname -> id 변환
-		String id = userRepository.getIdByNickname(nickname);
-		
-		tripRepository.deleteTrip(id, tripCount);
+	public void deleteTrip(String userId, String tripCount) {
+		tripRepository.deleteTrip(userId, tripCount);
 	}
 	
 	// 여행 이름 변경
-	public void changeTripName(String nickname, String tripCount, String newTripName) {
-		// nickname -> id 변환
-		String id = userRepository.getIdByNickname(nickname);
+	public void changeTripName(String userId, String tripCount, String newTripName) {
+		TripDto tripDto = tripRepository.getTrip(userId, tripCount);
 		
-		TripDto tripDto = tripRepository.getTrip(id, tripCount);
-		
-		tripRepository.changeTripName(id, tripDto, newTripName);
+		tripRepository.changeTripName(userId, tripDto, newTripName);
 	}
 }
